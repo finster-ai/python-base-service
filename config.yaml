@@ -1,0 +1,6 @@
+app:
+    secret_key: "prod_secret_key"
+    debug: false
+database:
+    uri: "postgresql://user:password@localhost/production"
+    pool_size: 20

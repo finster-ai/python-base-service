@@ -1,0 +1,82 @@
+swagger: "2.0"
+info:
+    title: "Finster AI Backend API"
+    description: "Finster AI Backend API of data-feed app"
+    version: "1.0.0"
+basePath: "api-gpu.finster.ai"
+schemes:
+    - "http"
+    - "https"
+responses:
+    InvalidDataKey:
+        description: Bad request
+        schema:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    example: 2
+                message:
+                    type: string
+                    example: Invalid data Key
+    InputNotArray:
+        description: Bad request
+        schema:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    example: 3
+                message:
+                    type: string
+                    example: "Bad request"
+    MethodNotAllowed:
+        description: Method Not Allowed
+        schema:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    example: 1
+                message:
+                    type: string
+                    example: Method Not Allowed
+paths:
+    /public:
+        get:
+            summary: "Public endpoint"
+            description: "This doesn't need authentication"
+            responses:
+                200:
+                    description: "Public endpoint response"
+                    schema:
+                        type: object
+                        properties:
+                            message:
+                                type: string
+                                example: ':A:A:A:A'
+                "400":
+                    $ref: '#/responses/InvalidDataKey'
+                "401":
+                    $ref: '#/responses/InputNotArray'
+                "405":
+                    $ref: '#/responses/MethodNotAllowed'
+    /private:
+        get:
+            summary: "Private endpoint"
+            description: "This needs authentication"
+            responses:
+                200:
+                    description: "Private endpoint response"
+                    schema:
+                        type: object
+                        properties:
+                            message:
+                                type: string
+                                example: 'Hello from a private endpoint! You need to be authenticated to see this.'
+                "400":
+                    $ref: '#/responses/InvalidDataKey'
+                "401":
+                    $ref: '#/responses/InputNotArray'
+                "405":
+                    $ref: '#/responses/MethodNotAllowed'
