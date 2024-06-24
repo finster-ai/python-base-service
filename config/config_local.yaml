@@ -1,0 +1,23 @@
+app:
+    secret_key: "prod_secret_key"
+    debug: false
+auth:
+    domain: "dev-dev53al0gd7odyq5.us.auth0.com"
+    audience: "https://dev-dev53al0gd7odyq5.us.auth0.com/api/v2/"
+    algorithms: ["RS256"]
+database:
+    sql:
+        uri: "DEVELOPMENT_DB_URL"
+        pool_size: 20
+        version: 1.1.4
+    mongodb:
+        uri: "mongodb+srv://finster-dev:3tLRNLbel7DCZCal@finster-dev.gixif.mongodb.net/?retryWrites=true&w=majority&appName=finster-dev"
+    #        database: "MONGODB_DATABASE"
+    redis:
+        host: "redis-19623.c238.us-central1-2.gce.redns.redis-cloud.com"
+        port: 19623
+        password: 'kwjfrJy1svND2CnJ2tXi8MSyVcTMxT9d''
+pubsub:
+    project_id: "daring-keep-408013"
+    topic_id: "test-queue-dev"
+    subscription_id: "test-queue-dev-sub"

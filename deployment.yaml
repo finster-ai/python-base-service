@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-base-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-base-service
+  template:
+    metadata:
+      labels:
+        app: api-base-service
+    spec:
+      containers:
+      - name: api-base-service
+        image: gcr.io/daring-keep-408013/github.com/finster-ai/services/api-base-service/api-base-service:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "60G"
+            cpu: "15"
+        ports:
+        - containerPort: 8080
+        env:
+          - name: PORT
+            value: "8080"
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: "/var/secrets/google/key.json"
+          - name: FLASK_ENV
+            value: "development"  # Set the desired environment here (e.g., development, production, local)
+        volumeMounts:
+          - name: google-cloud-key
+            mountPath: /var/secrets/google
+            readOnly: true
+      volumes:
+        - name: google-cloud-key
+          secret:
+            secretName: google-cloud-key

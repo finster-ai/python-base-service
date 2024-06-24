@@ -8,10 +8,16 @@ from functools import wraps
 from flask import Flask, request, jsonify, g
 from flask_cors import cross_origin
 from jose import jwt
+import logging
+import os
 
-AUTH0_DOMAIN = 'dev-dev53al0gd7odyq5.us.auth0.com'
-API_AUDIENCE = 'https://dev-dev53al0gd7odyq5.us.auth0.com/api/v2/'
-ALGORITHMS = ["RS256"]
+# Initialize logger
+logger = logging.getLogger(__name__)
+
+# Initialize these variables with None
+AUTH0_DOMAIN = None
+API_AUDIENCE = None
+ALGORITHMS = None
 
 
 # Error handler
@@ -19,6 +25,15 @@ class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
+
+
+def set_auth_config(domain, audience, algorithms):
+    global AUTH0_DOMAIN, API_AUDIENCE, ALGORITHMS
+    AUTH0_DOMAIN = domain
+    API_AUDIENCE = audience
+    ALGORITHMS = algorithms
+    logger.info(f"Auth config set: domain={domain}, audience={audience}, algorithms={algorithms}")
+
 
 def get_token_auth_header():
     """Obtains the Access Token from the Authorization Header
@@ -53,7 +68,11 @@ def requires_auth(f):
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-
+        # Check if the environment is local
+        environment = os.getenv('FLASK_ENV', 'local')
+        if environment == 'local':
+            logger.info("Local environment detected. Skipping authentication.")
+            return f(*args, **kwargs)
 
         try:
             token = get_token_auth_header()
@@ -79,6 +98,7 @@ def requires_auth(f):
                         audience=API_AUDIENCE,
                         issuer="https://"+AUTH0_DOMAIN+"/"
                     )
+                    logger.info(f"Token decoded successfully: {payload}")
                 except jwt.ExpiredSignatureError:
                     raise AuthError({"code": "token_expired",
                                      "description": "token is expired"}, 401)
@@ -87,7 +107,8 @@ def requires_auth(f):
                                      "description":
                                          "incorrect claims,"
                                          "please check the audience and issuer"}, 401)
-                except Exception:
+                except Exception as e:
+                    logger.error(f"Token parsing error: {e}")
                     raise AuthError({"code": "invalid_header",
                                      "description":
                                          "Unable to parse authentication"
@@ -97,7 +118,8 @@ def requires_auth(f):
                 return f(*args, **kwargs)
             raise AuthError({"code": "invalid_header",
                              "description": "Unable to find appropriate key"}, 401)
-        except Exception:
+        except Exception as e:
+            logger.error(f"Authentication error: {e}")
             raise AuthError({"code": "invalid_header",
                              "description": "Unable to parse authentication"" token."}, 401)
     return decorated
