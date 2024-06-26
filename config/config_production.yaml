@@ -12,11 +12,11 @@ database:
         version: 1.1.4
     mongodb:
         uri: "mongodb+srv://finster:AmGCRXAH2XQrkOGc@finster.gixif.mongodb.net/?retryWrites=true&w=majority&appName=finster"
-    #        database: "MONGODB_DATABASE"
+        #        database: "MONGODB_DATABASE"
     redis:
         host: "redis-19623.c238.us-central1-2.gce.redns.redis-cloud.com"
         port: 19623
-        password: 'kwjfrJy1svND2CnJ2tXi8MSyVcTMxT9d''
+        password: 'kwjfrJy1svND2CnJ2tXi8MSyVcTMxT9d'
 pubsub:
     project_id: "daring-keep-408013"
     topic_id: "test-queue"

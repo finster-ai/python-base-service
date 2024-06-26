@@ -46,6 +46,9 @@ def configure_app_environment_values(app):
     # Determine the environment from an environment variable
     environment = os.getenv('FLASK_ENV', defaultEnvironment)
 
+    # Set the environment in the app config
+    app.config['ENVIRONMENT'] = environment
+
     # Load the common configuration file
     with open('config/common.yaml', 'r') as common_file:
         common_config = yaml.safe_load(common_file)
@@ -79,7 +82,7 @@ def configure_app_environment_values(app):
     # )
 
 
-def configure_pub_sub_queues():
+def configure_pub_sub_queues(app):
     # Google Pub/Sub configuration
     project_id = app.config['PUBSUB_PROJECT_ID']
     topic_id = app.config['PUBSUB_TOPIC_ID']
@@ -102,30 +105,20 @@ def create_app():
     configure_app_environment_values(app)
 
     # Set auth configuration
-    set_auth_config(app.config['AUTH0_DOMAIN'], app.config['API_AUDIENCE'], app.config['ALGORITHMS'])
+    set_auth_config(app.config['AUTH_DOMAIN'], app.config['AUTH_AUDIENCE'], app.config['AUTH_ALGORITHMS'])
     # logger.info(f"Merged config: {config}\n\n\n")
 
-    # # Google Pub/Sub configuration
-    configure_pub_sub_queues()
+    # Google Pub/Sub configuration
+    configure_pub_sub_queues(app)
 
-    # project_id = config['pubsub']['project_id']
-    # topic_id = config['pubsub']['topic_id']
-    # subscription_id = config['pubsub']['subscription_id']
-    # publisher = pubsub_v1.PublisherClient()
-    # topic_path = publisher.topic_path(project_id, topic_id)
-    # subscriber = pubsub_v1.SubscriberClient()
-    # subscription_path = subscriber.subscription_path(project_id, subscription_id)
-
-# Log the running environment, database URL, and topic ID
-    logger.info("############################################################################################################################################################################")
+    # Log the running environment, database URL, and topic ID
+    logger.info("\n\n\n\n###################################################################################################################################################################################################################################")
     logger.info(f"RUNNING ENVIRONMENT: {app.config['ENVIRONMENT']}\n")
-    # logger.info("\n")
-    logger.info(f"Database URL: {app.config['ENVIRONMENT']}")
+    # logger.info(f"Database URL: {app.config['DATABASE_SQL_URI']}")
     logger.info(f"Pub/Sub Topic ID: {app.config['PUBSUB_TOPIC_ID']}")
-    logger.info(f"Auth Domain: {app.config['AUTH0_DOMAIN']}")
-    logger.info(f"API Audience: {app.config['API_AUDIENCE']}")
-    logger.info("############################################################################################################################################################################\n\n\n")
-    # logger.info("\n\n\n")
+    logger.info(f"Auth Domain: {app.config['AUTH_DOMAIN']}")
+    logger.info(f"API Audience: {app.config['AUTH_AUDIENCE']}")
+    logger.info(f"MongoDB URI: {app.config['DATABASE_MONGODB']['uri']}\n###################################################################################################################################################################################################################################\n\n\n")
 
     # Construct the correct path to the YAML file
     current_dir = os.path.dirname(__file__)
@@ -144,7 +137,7 @@ def create_app():
         logger.info("Message processing finished")
         message.ack()
 
-    def start_subscriber(callback, max_workers=1):
+    def start_subscriber(callback, subscription_path, max_workers=1):
         logger.info("Creating ThreadPoolExecutor with max_workers=%d", max_workers)
         executor = ThreadPoolExecutor(max_workers=max_workers)
         logger.info("Creating Pub/Sub subscriber client")
