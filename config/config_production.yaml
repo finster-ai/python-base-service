@@ -1,6 +1,8 @@
 app:
     secret_key: "prod_secret_key"
     debug: false
+    project_id: "daring-keep-408013"
+    location: "us-central1"
 auth:
     domain: "finster.us.auth0.com"
     audience: "https://finster.us.auth0.com/api/v2/"

@@ -1,23 +1,21 @@
-
-from flask import Flask, jsonify
-
 import json
 from six.moves.urllib.request import urlopen
 from functools import wraps
 
-from flask import Flask, request, jsonify, g
-from flask_cors import cross_origin
+from flask import request, g
 from jose import jwt
-import logging
+# import logging
+
+from app.service.gcp_logging import logger
 import os
 
 # Initialize logger
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
-# Initialize these variables with None
 AUTH0_DOMAIN = None
 API_AUDIENCE = None
 ALGORITHMS = None
+defaultEnvironment = None
 
 
 # Error handler
@@ -27,12 +25,12 @@ class AuthError(Exception):
         self.status_code = status_code
 
 
-def set_auth_config(domain, audience, algorithms):
-    global AUTH0_DOMAIN, API_AUDIENCE, ALGORITHMS
+def set_auth_config(domain, audience, algorithms, defenv):
+    global AUTH0_DOMAIN, API_AUDIENCE, ALGORITHMS, defaultEnvironment
     AUTH0_DOMAIN = domain
     API_AUDIENCE = audience
     ALGORITHMS = algorithms
-    logger.info(f"Auth config set: domain={domain}, audience={audience}, algorithms={algorithms}")
+    defaultEnvironment = defenv
 
 
 def get_token_auth_header():
@@ -63,13 +61,15 @@ def get_token_auth_header():
     token = parts[1]
     return token
 
+
+# This checks if the JWT in Auth header is valid, decodes it and assigns the payload to g.current_user. If not it raises an authentication error
 def requires_auth(f):
     """Determines if the Access Token is valid
     """
     @wraps(f)
     def decorated(*args, **kwargs):
         # Check if the environment is local
-        environment = os.getenv('FLASK_ENV', 'local')
+        environment = os.getenv('FLASK_ENV', defaultEnvironment)
         if environment == 'local':
             logger.info("Local environment detected. Skipping authentication.")
             return f(*args, **kwargs)
@@ -98,7 +98,7 @@ def requires_auth(f):
                         audience=API_AUDIENCE,
                         issuer="https://"+AUTH0_DOMAIN+"/"
                     )
-                    logger.info(f"Token decoded successfully: {payload}")
+                    # logger.info(f"Token decoded successfully: {payload}")
                 except jwt.ExpiredSignatureError:
                     raise AuthError({"code": "token_expired",
                                      "description": "token is expired"}, 401)
