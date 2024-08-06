@@ -2,20 +2,16 @@ import json
 from six.moves.urllib.request import urlopen
 from functools import wraps
 
-from flask import request, g
+from flask import Flask, request, jsonify, g
 from jose import jwt
-# import logging
-
-from app.service.gcp_logging import logger
+from app_instance import app, logger
 import os
 
-# Initialize logger
-# logger = logging.getLogger(__name__)
 
-AUTH0_DOMAIN = None
-API_AUDIENCE = None
-ALGORITHMS = None
-defaultEnvironment = None
+AUTH0_DOMAIN = app.config['AUTH_DOMAIN']
+API_AUDIENCE = app.config['AUTH_AUDIENCE']
+ALGORITHMS = app.config['AUTH_ALGORITHMS']
+defaultEnvironment = app.config['DEFAULT_ENVIRONMENT']
 
 
 # Error handler
@@ -23,14 +19,6 @@ class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
-
-
-def set_auth_config(domain, audience, algorithms, defenv):
-    global AUTH0_DOMAIN, API_AUDIENCE, ALGORITHMS, defaultEnvironment
-    AUTH0_DOMAIN = domain
-    API_AUDIENCE = audience
-    ALGORITHMS = algorithms
-    defaultEnvironment = defenv
 
 
 def get_token_auth_header():

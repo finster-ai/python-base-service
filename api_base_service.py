@@ -1,7 +1,6 @@
 
 
 #api_base_service.py
-
 import os
 import threading
 import yaml
@@ -11,26 +10,57 @@ from google.cloud import pubsub_v1
 from concurrent.futures import ThreadPoolExecutor
 from flasgger import Swagger
 from app.service import AuthService
-from app.service.AuthService import requires_auth, set_auth_config
-from app.service.gcp_logging import logger
-from app_instance import app
-import logging
+from app.service.AuthService import requires_auth
+from app_instance import app, logger  # Updated import to include logger from app_instance
 
 
 
-# Ensure Gunicorn logs go through the root logger
-gunicorn_error_logger = logging.getLogger('gunicorn.error')
-gunicorn_error_logger.handlers = logger.handlers
-gunicorn_error_logger.setLevel(logger.level)
 
-gunicorn_access_logger = logging.getLogger('gunicorn.access')
-gunicorn_access_logger.handlers = logger.handlers
-gunicorn_access_logger.setLevel(logger.level)
 
-# Add these print statements to verify logger handlers
-print(f"Root logger handlers 2: {logging.getLogger().handlers}")
-print(f"Gunicorn error logger handlers 2: {gunicorn_error_logger.handlers}")
-print(f"Gunicorn access logger handlers 2: {gunicorn_access_logger.handlers}")
+
+# @cross_origin(origin="*")
+# @app.route("/reports/<user_id>", methods=["GET"])
+# @query_tracking_with_id
+# @requires_auth
+# def get_all_reports(user_id):
+#     # Get query parameters for pagination and sorting
+#     page = int(request.args.get('page', 1))
+#     page_size = int(request.args.get('page_size', 10))
+#     sort_by = request.args.get('sort_by', 'timestamp')  # Default sort by timestamp
+#
+#     # Fetch all reports
+#     # TODO When we have services do the pagination and sorting in the db layer.
+#     entry = db.read_all_reports(user_id)
+#
+#     # ?DO YOU WANT ASCENDING AND DESCENDING SORTING?
+#     # DO YOU WANT THE RESPONSES OF THESE ENDPOINTS TO USE THIS STRUCTURE? (DATA RESPONSE STRUCTURE LA QUE PUSE COMO
+#     #                                                                      ESTRUCTURA ESNSTADARD EN EL DOC DE NOTION)
+#
+#
+#
+#     # Hacky change to reduce payload.
+#     # Delete all sections from reports.
+#     for report in entry:
+#         del report['report_json']['sections']
+#
+#     # Sort the reports
+#     entry.sort(key=lambda x: x.get(sort_by, ''))
+#
+#     # Pagination
+#     if page == 0 and page_size == 0:
+#         paginated_entry = entry
+#     else:
+#         start = (page - 1) * page_size
+#         end = start + page_size
+#         paginated_entry = entry[start:end]
+#
+#     response = jsonify(paginated_entry)
+#
+#     response.headers.add("Access-Control-Allow-Origin", "*")
+#     response.headers.add("ContentType", "application/json")
+#
+#     return response
+
 
 
 def create_app():
@@ -42,11 +72,7 @@ def create_app():
     logger.info("TEST: Logging is set up correctly 2.")
 
     # Add Environment Values to the App
-    # configure_app_environment_values(app)
 
-    # Set auth configuration
-    set_auth_config(app.config['AUTH_DOMAIN'], app.config['AUTH_AUDIENCE'], app.config['AUTH_ALGORITHMS'], app.config['DEFAULT_ENVIRONMENT'])
-    # logger.info(f"Merged config: {config}\n\n\n")
 
     # Construct the correct path to the YAML file
     current_dir = os.path.dirname(__file__)

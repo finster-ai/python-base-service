@@ -5,9 +5,10 @@ from flask_cors import CORS
 import re
 import os
 import yaml
-# import logging
-from app.service.gcp_logging import logger
+import logging
 
+# Set the default logging level
+LOG_LEVEL = logging.INFO
 
 
 app = Flask(__name__)
@@ -17,6 +18,34 @@ CORS(app, supports_credentials=True)
 defaultEnvironment = 'local'
 # defaultEnvironment = 'development'
 # defaultEnvironment = 'production'
+
+# Configure logging to work with Gunicorn or in standalone mode
+gunicorn_logger = logging.getLogger('gunicorn.error')
+
+if gunicorn_logger.handlers:
+    # If Gunicorn is available, use its handlers
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(LOG_LEVEL)
+else:
+    # Otherwise, set up a new handler for the root logger
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('[%(asctime)s +0000] [%(process)d] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s'))
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear()  # Clear existing handlers
+    root_logger.addHandler(handler)
+    root_logger.setLevel(LOG_LEVEL)
+    root_logger.propagate = False
+    app.logger.handlers = [handler]
+    app.logger.setLevel(LOG_LEVEL)
+
+# Ensure no log messages are duplicated
+app.logger.propagate = False
+# Set a global `logger` to `app.logger` to use throughout the module
+logger = app.logger
+
+
+
+
 
 
 def deep_merge_dicts(a, b):
@@ -36,6 +65,16 @@ def print_test_logs():
     logger.warning("This is a WARNING message.")
     logger.error("This is an ERROR message.")
     logger.critical("This is a CRITICAL message.")
+
+
+# def print_test_logs2():
+#     # logger2 = logging.getLogger()
+#     #
+#     # logger2.debug("222222222 - This is a DEBUG message.")
+#     # logger2.info("222222222 - This is an INFO message.")
+#     # logger2.warning("222222222 - This is a WARNING message.")
+#     # logger2.error("222222222 - This is an ERROR message.")
+#     # logger2.critical("222222222 - This is a CRITICAL message.")
 
 
 def rename_keys(d, parent_key=''):
@@ -78,7 +117,15 @@ def replace_sensitive_info(line):
 
 def print_environment_debug_logs():
     # Log the running environment, database URL, and topic ID
-    logger.info("\n\n\n\n###################################################################################################################################################################################################################################")
+    if gunicorn_logger.handlers:
+        logger.info("")
+        logger.info("")
+        logger.info("")
+        logger.info("")
+        logger.info("###################################################################################################################################################################################################################################")
+    else:
+        logger.info("\n\n\n\n###################################################################################################################################################################################################################################")
+
     logger.info(f"RUNNING ENVIRONMENT: {app.config['ENVIRONMENT']}\n")
     # logger.info(f"Database URL: {app.config['DATABASE_SQL_URI']}")
     logger.info(f"Pub/Sub Topic ID: {app.config['PUBSUB_TOPIC_ID']}")
@@ -89,7 +136,16 @@ def print_environment_debug_logs():
     logger.info(f"Project: {app.config['APP_PROJECT_ID']}")
     logger.info(f"Location: {app.config['APP_LOCATION']}")
     # logger.info(f"MongoDB URI: {app.config['DATABASE_MONGODB_URI']}")
-    logger.info(f"MongoDB URI: {replace_sensitive_info(app.config['DATABASE_MONGODB_URI'])}\n###################################################################################################################################################################################################################################\n\n\n")
+    if gunicorn_logger.handlers:
+        logger.info(f"MongoDB URI: {replace_sensitive_info(app.config['DATABASE_MONGODB_URI'])}")
+        logger.info("###################################################################################################################################################################################################################################")
+        logger.info("")
+        logger.info("")
+        logger.info("")
+    else:
+        logger.info(f"MongoDB URI: {replace_sensitive_info(app.config['DATABASE_MONGODB_URI'])}\n###################################################################################################################################################################################################################################\n\n\n")
+
+
 
 
 def configure_app_environment_values():
@@ -132,3 +188,4 @@ def configure_app_environment_values():
 configure_app_environment_values()
 print_environment_debug_logs()
 print_test_logs()
+# print_test_logs2()
