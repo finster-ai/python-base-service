@@ -1,78 +1,22 @@
 
-
 #api_base_service.py
 import os
 import threading
 import yaml
-from flask import jsonify
-from flask_cors import cross_origin
 from google.cloud import pubsub_v1
 from concurrent.futures import ThreadPoolExecutor
 from flasgger import Swagger
-from app.service import AuthService
-from app.service.AuthService import requires_auth
+from app.utils.wrappers import set_session_id, query_tracking_with_id
 from app_instance import app, logger  # Updated import to include logger from app_instance
-
-
-
-
-
-
-# @cross_origin(origin="*")
-# @app.route("/reports/<user_id>", methods=["GET"])
-# @query_tracking_with_id
-# @requires_auth
-# def get_all_reports(user_id):
-#     # Get query parameters for pagination and sorting
-#     page = int(request.args.get('page', 1))
-#     page_size = int(request.args.get('page_size', 10))
-#     sort_by = request.args.get('sort_by', 'timestamp')  # Default sort by timestamp
-#
-#     # Fetch all reports
-#     # TODO When we have services do the pagination and sorting in the db layer.
-#     entry = db.read_all_reports(user_id)
-#
-#     # ?DO YOU WANT ASCENDING AND DESCENDING SORTING?
-#     # DO YOU WANT THE RESPONSES OF THESE ENDPOINTS TO USE THIS STRUCTURE? (DATA RESPONSE STRUCTURE LA QUE PUSE COMO
-#     #                                                                      ESTRUCTURA ESNSTADARD EN EL DOC DE NOTION)
-#
-#
-#
-#     # Hacky change to reduce payload.
-#     # Delete all sections from reports.
-#     for report in entry:
-#         del report['report_json']['sections']
-#
-#     # Sort the reports
-#     entry.sort(key=lambda x: x.get(sort_by, ''))
-#
-#     # Pagination
-#     if page == 0 and page_size == 0:
-#         paginated_entry = entry
-#     else:
-#         start = (page - 1) * page_size
-#         end = start + page_size
-#         paginated_entry = entry[start:end]
-#
-#     response = jsonify(paginated_entry)
-#
-#     response.headers.add("Access-Control-Allow-Origin", "*")
-#     response.headers.add("ContentType", "application/json")
-#
-#     return response
-
+from app.controller.controller import controller_blueprint, url_prefix_controller
 
 
 def create_app():
-    # Initialize Flask app
-    # app = Flask(__name__)
+    # Register blueprints
+    app.register_blueprint(controller_blueprint, url_prefix=url_prefix_controller)
 
     # Add a test log statement
     logger.info("TEST: Logging is set up correctly.")
-    logger.info("TEST: Logging is set up correctly 2.")
-
-    # Add Environment Values to the App
-
 
     # Construct the correct path to the YAML file
     current_dir = os.path.dirname(__file__)
@@ -139,37 +83,8 @@ def create_app():
         except Exception as e:
             logger.error("Failed to start subscriber: %s", e)
 
-    @app.errorhandler(AuthService.AuthError)
-    def handle_auth_error(ex):
-        response = jsonify(ex.error)
-        response.status_code = ex.status_code
-        return response
-
-    # This doesn't need authentication
-    @app.route("/api/public")
-    @cross_origin(headers=["Content-Type", "Authorization"])
-    def public():
-        response = jsonify(":A:A:A:A")
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add("ContentType", "application/json")
-        logger.info("Listening for messages you've reached this endpoint")
-        return response
-
-    # This needs authentication
-    @app.route("/api/private")
-    @cross_origin(headers=["Content-Type", "Authorization"])
-    @requires_auth
-    def private():
-        response = (
-            "Hello from a private endpoint! You need to be authenticated to see this."
-        )
-        return jsonify(message=response)
-
-    @app.route("/")
-    def hello_world():  # put application's code here
-        return "Hello World!"
-
     logger.info("Starting the app")
+
     try:
         logger.info("Starting the subscriber thread...")
         subscriber_thread = threading.Thread(target=start_subscriber,
@@ -181,11 +96,12 @@ def create_app():
     except Exception as e:
         logger.error(f"Failed to start subscriber thread: {e}")
 
-    # return app
+
+
+
 
 
 # This is the entry point for Gunicorn
-# app = create_app()
 create_app()
 
 if __name__ == "__main__":

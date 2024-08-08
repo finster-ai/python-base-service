@@ -45,20 +45,6 @@ logger = app.logger
 
 
 
-
-
-
-def deep_merge_dicts(a, b):
-    """Deep merge two dictionaries."""
-    result = a.copy()
-    for key, value in b.items():
-        if isinstance(value, dict) and key in result:
-            result[key] = deep_merge_dicts(result[key], value)
-        else:
-            result[key] = value
-    return result
-
-
 def print_test_logs():
     logger.debug("This is a DEBUG message.")
     logger.info("This is an INFO message.")
@@ -75,6 +61,17 @@ def print_test_logs():
 #     # logger2.warning("222222222 - This is a WARNING message.")
 #     # logger2.error("222222222 - This is an ERROR message.")
 #     # logger2.critical("222222222 - This is a CRITICAL message.")
+
+
+def deep_merge_dicts(a, b):
+    """Deep merge two dictionaries."""
+    result = a.copy()
+    for key, value in b.items():
+        if isinstance(value, dict) and key in result:
+            result[key] = deep_merge_dicts(result[key], value)
+        else:
+            result[key] = value
+    return result
 
 
 def rename_keys(d, parent_key=''):

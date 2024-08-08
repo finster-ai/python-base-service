@@ -20,8 +20,10 @@ google-cloud-secret-manager
 google-cloud-logging
 google-cloud-pubsub
 loguru
-pyyaml
-flasgger
+pyyaml~=6.0.1
+flasgger~=0.9.7.1
 python-json-logger
 google-cloud-logging==3.10.0
 google-cloud-logging==3.10.0
+
+utils~=1.0.2
