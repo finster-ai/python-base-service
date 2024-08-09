@@ -16,6 +16,8 @@ from app_instance import app
 from multiprocessing import Process
 # from app.grpc_server import start_grpc_server
 
+os.environ['GRPC_VERBOSITY'] = 'ERROR'
+
 
 def create_app():
     # Register blueprints
