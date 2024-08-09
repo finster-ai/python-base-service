@@ -6,9 +6,15 @@ import yaml
 from google.cloud import pubsub_v1
 from concurrent.futures import ThreadPoolExecutor
 from flasgger import Swagger
+
+from app.grpc.base_model1_grpc_impl import serve
 from app.utils.wrappers import set_session_id, query_tracking_with_id
 from app_instance import app, logger  # Updated import to include logger from app_instance
 from app.controller.controller import controller_blueprint, url_prefix_controller
+import threading
+from app_instance import app
+from multiprocessing import Process
+# from app.grpc_server import start_grpc_server
 
 
 def create_app():
@@ -96,15 +102,19 @@ def create_app():
     except Exception as e:
         logger.error(f"Failed to start subscriber thread: {e}")
 
-
-
-
+    # grpc_process = Process(target=serve)
+    # grpc_process.start()
 
 
 # This is the entry point for Gunicorn
 create_app()
+# Start the GRPC server before running the Flask app
+grpc_thread = threading.Thread(target=serve)
+grpc_thread.start()
 
 if __name__ == "__main__":
+    # grpc_process = Process(target=serve)
+    # grpc_process.start()
     app.run(host="0.0.0.0", port=8080, debug=False)
 
 
