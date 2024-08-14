@@ -14,6 +14,7 @@ from app.controller.controller import controller_blueprint, url_prefix_controlle
 import threading
 from app_instance import app
 from multiprocessing import Process
+from app.pubsub import gcp_pub_sub_consumer
 # from app.grpc_server import start_grpc_server
 
 os.environ['GRPC_VERBOSITY'] = 'ERROR'
@@ -38,65 +39,10 @@ def create_app():
         swagger_template = yaml.safe_load(file)
     swagger = Swagger(app, template=swagger_template)
 
-    def templates_topic_call_back(message):
-        logger.info("Message received: %s", message.data)
-        logger.info("Message processing finished")
-        message.ack()
-
-    def start_subscriber(callback, max_workers=1):
-        project_id = app.config['PUBSUB_PROJECT_ID']
-        topic_id = app.config['PUBSUB_TOPIC_ID']
-        subscription_id = app.config['PUBSUB_SUBSCRIPTION_ID']
-        publisher = pubsub_v1.PublisherClient()
-        topic_path = publisher.topic_path(project_id, topic_id)
-        subscriber = pubsub_v1.SubscriberClient()
-        subscription_path = subscriber.subscription_path(project_id, subscription_id)
-        """
-        Starts the Pub/Sub subscriber to listen for messages on a given subscription.
-        Subscribes to the specified subscription path and processes messages using the
-        templates_topic_call_back function. This function waits for messages to be received
-        and processed.
-
-        Args:
-            callback (function): The callback function to process received messages.
-            max_workers (int): The maximum number of concurrent worker threads.
-        """
-
-        # Create a custom ThreadPoolExecutor with a maximum number of workers
-        logger.info("Creating ThreadPoolExecutor with max_workers=%d", max_workers)
-        executor = ThreadPoolExecutor(max_workers=max_workers)
-
-        logger.info("Creating Pub/Sub subscriber client")
-        subscriber = pubsub_v1.SubscriberClient()
-
-        logger.info("Subscribing to %s", subscription_path)
-        try:
-            streaming_pull_future = subscriber.subscribe(
-                subscription_path,
-                callback=callback,
-                scheduler=pubsub_v1.subscriber.scheduler.ThreadScheduler(executor=executor)
-            )
-
-            logger.info(f"Listening for messages on {subscription_path}..\n")
-
-            with subscriber:
-                try:
-                    streaming_pull_future.result()
-                except TimeoutError:
-                    logger.error("TimeoutError encountered, cancelling streaming_pull_future..")
-                    streaming_pull_future.cancel()
-                except Exception as e:
-                    logger.error("An error occurred in the subscriber: %s", e)
-                    streaming_pull_future.cancel()
-        except Exception as e:
-            logger.error("Failed to start subscriber: %s", e)
-
-    logger.info("Starting the app")
-
     try:
         logger.info("Starting the subscriber thread...")
-        subscriber_thread = threading.Thread(target=start_subscriber,
-                                             args=(templates_topic_call_back,),
+        subscriber_thread = threading.Thread(target=gcp_pub_sub_consumer.start_subscriber,
+                                             args=(gcp_pub_sub_consumer.consume_message,),
                                              kwargs={"max_workers": 1},
                                              daemon=True)
         subscriber_thread.start()

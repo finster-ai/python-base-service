@@ -1,11 +1,10 @@
 import json
+import os
 from six.moves.urllib.request import urlopen
 from functools import wraps
-
 from flask import Flask, request, jsonify, g
 from jose import jwt
 from app_instance import app, logger
-import os
 
 
 AUTH0_DOMAIN = app.config['AUTH_DOMAIN']
@@ -88,26 +87,19 @@ def requires_auth(f):
                     )
                     # logger.info(f"Token decoded successfully: {payload}")
                 except jwt.ExpiredSignatureError:
-                    raise AuthError({"code": "token_expired",
-                                     "description": "token is expired"}, 401)
+                    raise AuthError({"code": "token_expired", "description": "token is expired"}, 401)
                 except jwt.JWTClaimsError:
-                    raise AuthError({"code": "invalid_claims",
-                                     "description":
-                                         "incorrect claims,"
-                                         "please check the audience and issuer"}, 401)
+                    raise AuthError({"code": "invalid_claims", "description": "incorrect claims," "please check the audience and issuer"}, 401)
                 except Exception as e:
                     logger.error(f"Token parsing error: {e}")
-                    raise AuthError({"code": "invalid_header",
-                                     "description":
-                                         "Unable to parse authentication"
-                                         " token."}, 401)
+                    raise AuthError({"code": "invalid_header", "description": "Unable to parse authentication" " token."}, 401)
 
                 g.current_user = payload
                 return f(*args, **kwargs)
-            raise AuthError({"code": "invalid_header",
-                             "description": "Unable to find appropriate key"}, 401)
-        except Exception as e:
+            else:
+                raise AuthError({"code": "invalid_header", "description": "Unable to find appropriate key"}, 401)
+
+        except AuthError as e:
             logger.error(f"Authentication error: {e}")
-            raise AuthError({"code": "invalid_header",
-                             "description": "Unable to parse authentication"" token."}, 401)
+            raise e  # Re-raise the AuthError to be handled by the Flask error handler
     return decorated
