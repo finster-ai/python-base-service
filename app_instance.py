@@ -1,16 +1,14 @@
 # app_instance.py
-
-from flask import Flask
-from flask_cors import CORS
 import re
 import os
 import yaml
 import logging
+from flask import Flask, g, has_request_context
+from flask_cors import CORS
 
 # Set the default logging level
 # LOG_LEVEL = logging.DEBUG
 LOG_LEVEL = logging.INFO
-tracking_prefix = ""
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -24,28 +22,49 @@ defaultLocation = 'us-central1'
 
 
 class CustomLogger(logging.getLoggerClass()):
+    def build_msg(self, msg):
+        if has_request_context():
+            request_id = getattr(g, 'request_id', '')
+            session_id = getattr(g, 'session_id', '')
+            user_id = getattr(g, 'user_id', '')
+            query_id = getattr(g, 'query_id', '')
+            parts = []
+            if request_id:
+                parts.append(f"[request_id: {request_id}]")
+            if session_id:
+                parts.append(f"[session_id: {session_id}]")
+            if user_id:
+                parts.append(f"[user_id: {user_id}]")
+            if query_id:
+                parts.append(f"[query_id: {query_id}]")
+
+            prefix = " ".join(parts)
+            return f"{prefix} {msg}" if prefix else msg
+        else:
+            return msg
+
     def info(self, msg, *args, **kwargs):
-        msg = f"{tracking_prefix} {msg}"
+        msg = self.build_msg(msg)
         super().info(msg, *args, stacklevel=2, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
-        msg = f"{tracking_prefix} {msg}"
+        msg = self.build_msg(msg)
         super().warning(msg, *args, stacklevel=2, **kwargs)
 
     def error(self, msg, *args, **kwargs):
-        msg = f"{tracking_prefix} {msg}"
+        msg = self.build_msg(msg)
         super().error(msg, *args, stacklevel=2, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
-        msg = f"{tracking_prefix} {msg}"
+        msg = self.build_msg(msg)
         super().debug(msg, *args, stacklevel=2, **kwargs)
 
     def critical(self, msg, *args, **kwargs):
-        msg = f"{tracking_prefix} {msg}"
+        msg = self.build_msg(msg)
         super().critical(msg, *args, stacklevel=2, **kwargs)
 
     def exception(self, msg, *args, **kwargs):
-        msg = f"{tracking_prefix} {msg}"
+        msg = self.build_msg(msg)
         super().exception(msg, *args, stacklevel=2, **kwargs)
 
 
