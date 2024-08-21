@@ -31,8 +31,8 @@ class CustomLogger(logging.getLoggerClass()):
             parts = []
             if request_id:
                 parts.append(f"[request_id: {request_id}]")
-            if session_id:
-                parts.append(f"[session_id: {session_id}]")
+            # if session_id:
+            #     parts.append(f"[session_id: {session_id}]")
             if user_id:
                 parts.append(f"[user_id: {user_id}]")
             if query_id:
@@ -97,12 +97,6 @@ else:
 app.logger.propagate = False
 # Set a global `logger` to `app.logger` to use throughout the module
 logger = app.logger
-
-
-def set_tracking_prefix(prefix=None):
-    global tracking_prefix
-    tracking_prefix = prefix if prefix else ""
-    app.logger.info(f"Tracking prefix set to: {tracking_prefix}")
 
 
 def print_test_logs():
