@@ -8,8 +8,9 @@ import yaml
 import logging
 
 # Set the default logging level
+# LOG_LEVEL = logging.DEBUG
 LOG_LEVEL = logging.INFO
-
+tracking_prefix = ""
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -18,6 +19,38 @@ CORS(app, supports_credentials=True)
 defaultEnvironment = 'local'
 # defaultEnvironment = 'development'
 # defaultEnvironment = 'production'
+defaultProjectId = 'daring-keep-408013'
+defaultLocation = 'us-central1'
+
+
+class CustomLogger(logging.getLoggerClass()):
+    def info(self, msg, *args, **kwargs):
+        msg = f"{tracking_prefix} {msg}"
+        super().info(msg, *args, stacklevel=2, **kwargs)
+
+    def warning(self, msg, *args, **kwargs):
+        msg = f"{tracking_prefix} {msg}"
+        super().warning(msg, *args, stacklevel=2, **kwargs)
+
+    def error(self, msg, *args, **kwargs):
+        msg = f"{tracking_prefix} {msg}"
+        super().error(msg, *args, stacklevel=2, **kwargs)
+
+    def debug(self, msg, *args, **kwargs):
+        msg = f"{tracking_prefix} {msg}"
+        super().debug(msg, *args, stacklevel=2, **kwargs)
+
+    def critical(self, msg, *args, **kwargs):
+        msg = f"{tracking_prefix} {msg}"
+        super().critical(msg, *args, stacklevel=2, **kwargs)
+
+    def exception(self, msg, *args, **kwargs):
+        msg = f"{tracking_prefix} {msg}"
+        super().exception(msg, *args, stacklevel=2, **kwargs)
+
+
+# Set the custom logger class before any logger is created
+logging.setLoggerClass(CustomLogger)
 
 # Configure logging to work with Gunicorn or in standalone mode
 gunicorn_logger = logging.getLogger('gunicorn.error')
@@ -26,6 +59,7 @@ if gunicorn_logger.handlers:
     # If Gunicorn is available, use its handlers
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(LOG_LEVEL)
+    app.logger.info("USING GUNICORN HANDLERS")
 else:
     # Otherwise, set up a new handler for the root logger
     handler = logging.StreamHandler()
@@ -37,12 +71,19 @@ else:
     root_logger.propagate = False
     app.logger.handlers = [handler]
     app.logger.setLevel(LOG_LEVEL)
+    app.logger.info("USING NEW SET UP HANDLERS")
+
 
 # Ensure no log messages are duplicated
 app.logger.propagate = False
 # Set a global `logger` to `app.logger` to use throughout the module
 logger = app.logger
 
+
+def set_tracking_prefix(prefix=None):
+    global tracking_prefix
+    tracking_prefix = prefix if prefix else ""
+    app.logger.info(f"Tracking prefix set to: {tracking_prefix}")
 
 
 def print_test_logs():
@@ -51,16 +92,6 @@ def print_test_logs():
     logger.warning("This is a WARNING message.")
     logger.error("This is an ERROR message.")
     logger.critical("This is a CRITICAL message.")
-
-
-# def print_test_logs2():
-#     # logger2 = logging.getLogger()
-#     #
-#     # logger2.debug("222222222 - This is a DEBUG message.")
-#     # logger2.info("222222222 - This is an INFO message.")
-#     # logger2.warning("222222222 - This is a WARNING message.")
-#     # logger2.error("222222222 - This is an ERROR message.")
-#     # logger2.critical("222222222 - This is a CRITICAL message.")
 
 
 def deep_merge_dicts(a, b):
@@ -155,6 +186,9 @@ def configure_app_environment_values():
 
     # Set the environment in the app config
     app.config['ENVIRONMENT'] = environment
+
+    app.config['APP_PROJECT_ID'] = os.getenv('PROJECT_ID', defaultProjectId)
+    app.config['APP_LOCATION'] = os.getenv('LOCATION', defaultLocation)
 
     # Set the default environment in the app config
     app.config['DEFAULT_ENVIRONMENT'] = defaultEnvironment

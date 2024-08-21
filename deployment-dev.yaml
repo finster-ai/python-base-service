@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weaviate-upload-service
+  namespace: dev
+  labels:
+    app: weaviate-upload-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weaviate-upload-service
+  template:
+    metadata:
+      labels:
+        app: weaviate-upload-service
+    spec:
+      serviceAccountName: data-feed
+      containers:
+        - name: weaviate-upload-service
+          image: us-central1-docker.pkg.dev/finster-ops/registry-docker/weaviate-upload-service:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 2048Mi
+              cpu: 500m
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+#            - name: GOOGLE_APPLICATION_CREDENTIALS
+#              value: "/var/secrets/google/key.json"
+            - name: FLASK_ENV
+              value: "development"
+            - name: PROJECT_ID
+              value: "finster-dev"
+            - name: LOCATION
+              value: "us-central1"
+            - name: CLUSTER_NAME
+              value: "dev"
+            - name: NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+#          volumeMounts:
+#            - name: google-cloud-key
+#              mountPath: /var/secrets/google
+#              readOnly: true
+#      volumes:
+#        - name: google-cloud-key
+#          secret:
+#            secretName: google-cloud-key

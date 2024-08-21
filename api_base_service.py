@@ -1,19 +1,13 @@
-
 #api_base_service.py
 import os
-import threading
 import yaml
-from google.cloud import pubsub_v1
-from concurrent.futures import ThreadPoolExecutor
 from flasgger import Swagger
 
 from app.grpc.base_model1_grpc_impl import serve
-from app.utils.wrappers import set_session_id, query_tracking_with_id
 from app_instance import app, logger  # Updated import to include logger from app_instance
 from app.controller.controller import controller_blueprint, url_prefix_controller
 import threading
 from app_instance import app
-from multiprocessing import Process
 from app.pubsub import gcp_pub_sub_consumer
 # from app.grpc_server import start_grpc_server
 

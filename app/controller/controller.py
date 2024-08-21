@@ -1,4 +1,4 @@
-
+# controller.py
 import logging
 import random
 from time import sleep
@@ -11,12 +11,13 @@ from flask import Blueprint, jsonify
 from flask_cors import cross_origin
 from app.service import AuthService
 from app.service.AuthService import requires_auth
-from app.utils.wrappers import set_session_id, query_tracking_with_id
+from app.utils.wrappers import set_session_id, request_tracking_with_id
 from werkzeug.exceptions import HTTPException
+import traceback
 
 
-# Initialize the logger
-logger = logging.getLogger(__name__)
+# # Initialize the logger
+# logger = logging.getLogger(__name__)
 
 # Create a Blueprint named 'controller'
 controller_blueprint = Blueprint('controller', __name__)
@@ -53,7 +54,7 @@ def handle_generic_blueprint_error(e):
 @controller_blueprint.route("/public")
 @cross_origin(headers=["Content-Type", "Authorization"])
 @set_session_id
-@query_tracking_with_id
+@request_tracking_with_id
 def public():
     logger.info("You've reached the " + request.endpoint + " endpoint")
     # Generate a random wait time between 1 and 5 seconds
@@ -71,7 +72,7 @@ def public():
 @controller_blueprint.route("/private")
 @cross_origin(headers=["Content-Type", "Authorization"])
 @requires_auth
-@query_tracking_with_id
+@request_tracking_with_id
 def private():
     try:
         # Intentionally raise an exception to test error handling
@@ -79,11 +80,26 @@ def private():
         response = "Hello from a private endpoint! You had to be authenticated to access to see this."
         return jsonify(message=response)
     except ValueError as e:
-        # Log the error and raise a new HTTPException
-        logger.error(f"An error occurred: {e}")
+        # TODO - ESTOS 2 LOGS SON EXACTAMENTE LO MISMO, CONVIENE USAR EL SEGUNDO
+        # logger.error(f"An error occurred: {e} - {traceback.format_exc()}")
+        logger.exception(f"An error occurred: ")
+
         error = HTTPException(description="A ValueError occurred in /private endpoint")
         error.code = 500  # Add a status code
         raise error
+
+
+# Define routes within the Blueprint
+@controller_blueprint.route("/public2")
+@cross_origin(headers=["Content-Type", "Authorization"])
+@set_session_id
+def public2():
+    logger.info("You've reached the " + request.endpoint + " endpoint")
+    # Generate a random wait time between 1 and 5 seconds
+    wait_time = random.uniform(1, 5)
+    sleep(wait_time)
+    response = create_api_response(":A:A:A:A - You had to wait for " + str(wait_time) + " seconds to see this.", g)
+    return response
 
 
 @controller_blueprint.route("/")

@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-config
+data:
+  PROJECT_ID: "daring-keep-408013"
+  LOCATION: "us-central1-a"
+  CLUSTER_NAME: "app-backend-cluster"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weaviate-upload-service-dev
+  namespace: default
+  labels:
+    app: weaviate-upload-service-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weaviate-upload-service-dev
+  template:
+    metadata:
+      labels:
+        app: weaviate-upload-service-dev
+    spec:
+      containers:
+        - name: weaviate-upload-service-dev
+          image: gcr.io/daring-keep-408013/weaviate-upload-service:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 2048Mi
+              cpu: 500m
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/var/secrets/google/key.json"
+            - name: FLASK_ENV
+              value: "development"  # Set the desired environment here (e.g., development, production, local)
+            - name: PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: env-config
+                  key: PROJECT_ID
+            - name: LOCATION
+              valueFrom:
+                configMapKeyRef:
+                  name: env-config
+                  key: LOCATION
+            - name: CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: env-config
+                  key: CLUSTER_NAME
+            - name: NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: google-cloud-key
+              mountPath: /var/secrets/google
+              readOnly: true
+      volumes:
+        - name: google-cloud-key
+          secret:
+            secretName: google-cloud-key

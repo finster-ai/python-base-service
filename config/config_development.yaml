@@ -2,8 +2,8 @@ app:
     secret_key: "prod_secret_key"
     debug: false
 #    project_id: "finster-dev"
-    project_id: "daring-keep-408013"
-    location: "us-central1"
+#    project_id: "daring-keep-408013"
+#    location: "us-central1"
 auth:
     domain: "dev-dev53al0gd7odyq5.us.auth0.com"
     audience: "https://dev-dev53al0gd7odyq5.us.auth0.com/api/v2/"

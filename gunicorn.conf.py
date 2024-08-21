@@ -28,10 +28,13 @@ class LevelBasedFilter(logging.Filter):
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
+        # Include filename and line number in the message itself
+        message = f"[{record.filename}:{record.lineno}]{record.getMessage()}"
         log_record = {
             'time': self.formatTime(record, self.datefmt),
             'level': record.levelname,
-            'message': record.getMessage(),
+            # 'message': record.getMessage(),
+            'message': message,
             'filename': record.filename,
             'lineno': record.lineno,
             'process': record.process,

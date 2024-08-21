@@ -37,7 +37,7 @@ def create_subscription_if_not_exists(subscriber, topic_path, subscription_path)
 
 
 def start_subscriber(callback, max_workers=1):
-    project_id = app.config['PUBSUB_PROJECT_ID']
+    project_id = app.config['APP_PROJECT_ID']
     topic_id = app.config['PUBSUB_TOPIC_ID']
     subscription_id = app.config['PUBSUB_SUBSCRIPTION_ID']
 

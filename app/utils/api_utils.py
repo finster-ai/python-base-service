@@ -6,6 +6,7 @@ from datetime import datetime
 def create_api_response(response_data, g):
     response = ApiResponse(
         timestamp=datetime.utcnow().isoformat(),
+        request_id=g.get("request_id", ""),
         query_id=g.get("query_id", ""),
         user_id=g.get("user_id", ""),
         session_id=g.get("session_id", ""),
@@ -44,10 +45,9 @@ def pagination(entry, request):
 
 def g_query_tracking_values_to_str(g):
     # session_id = g.get("session_id", "SESSION_ID_MISSING")
+    request_id = g.get("request_id", "REQUEST_ID_MISSING")
     query_id = g.get("query_id", "QUERY_ID_MISSING")
     user_id = g.get("user_id", "USER_ID_MISSING")
-    backend_call_id = g.get("backend_call_id", "BACKEND_CALL_ID_MISSING")
-    # response = f"call_id: {backend_call_id}  - user_id: {user_id} - session_id: {session_id} - query_id: {query_id}"
-    response = f"call_id: {backend_call_id}  - user_id: {user_id} -query_id: {query_id}"
+    response = f"call_id: {request_id}  - user_id: {user_id} -query_id: {query_id}"
     return response
 
