@@ -69,17 +69,17 @@ def setup_logging(min_log_level):
     root_logger.handlers = [stdout_handler, stderr_handler]
 
     # Configure Uvicorn error logger (equivalent to Gunicorn error_log)
-    uvicorn_error_logger = logging.getLogger("uvicorn.error")
-    uvicorn_error_logger.handlers = []  # Clear any existing handlers
-    uvicorn_error_logger.handlers.clear()
-    uvicorn_error_logger.addHandler(stdout_handler)
-    uvicorn_error_logger.addHandler(stderr_handler)
-
-    # Configure Uvicorn access logger (for access logs)
-    uvicorn_access_logger = logging.getLogger("uvicorn.access")
-    uvicorn_access_logger.handlers = []  # Clear any existing handlers
-    uvicorn_access_logger.handlers.clear()
-    uvicorn_access_logger.addHandler(stdout_handler)
+    # uvicorn_error_logger = logging.getLogger("uvicorn.error")
+    # uvicorn_error_logger.handlers = []  # Clear any existing handlers
+    # uvicorn_error_logger.handlers.clear()
+    # uvicorn_error_logger.addHandler(stdout_handler)
+    # uvicorn_error_logger.addHandler(stderr_handler)
+    #
+    # # Configure Uvicorn access logger (for access logs)
+    # uvicorn_access_logger = logging.getLogger("uvicorn.access")
+    # uvicorn_access_logger.handlers = []  # Clear any existing handlers
+    # uvicorn_access_logger.handlers.clear()
+    # uvicorn_access_logger.addHandler(stdout_handler)
     # You can also set `stderr_handler` here if you want higher-level logs (e.g., errors) from access logs
 
     # Ensure Uvicorn loggers don’t propagate to the root logger, to avoid duplicate logs
