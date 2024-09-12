@@ -1,7 +1,8 @@
 import functools
 import uuid
 from flask import request, g
-from app_instance import logger, set_tracking_prefix
+# from app_instance import logger, set_tracking_prefix
+from app_instance import logger
 from datetime import datetime
 
 

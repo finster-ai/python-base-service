@@ -1,64 +1,59 @@
-#api_base_service.py
-import os
-import yaml
-from flasgger import Swagger
+from contextlib import asynccontextmanager
 
-from app.grpc.base_model1_grpc_impl import serve
-from app_instance import app, logger  # Updated import to include logger from app_instance
-from app.controller.controller import controller_blueprint, url_prefix_controller
+from fastapi import FastAPI
+
+import app_instance
+from app_instance import app, logger, configure_app_environment_values, print_environment_debug_logs, print_test_logs
 import threading
-from app_instance import app
 from app.pubsub import gcp_pub_sub_consumer
-# from app.grpc_server import start_grpc_server
+from app.grpc.base_model1_grpc_impl import serve
+import logging
 
-os.environ['GRPC_VERBOSITY'] = 'ERROR'
+from logging_config import setup_logging, setup_logging_local
+
+logger.error("STARTUP TAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASK")
+logger.error("STARTUP TAAAAAAAAAAAAASK")
+logger.error("STARTUP TAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASK")
+logger.error("STARTUP TAAAAAAAAAAAAASK")
+# Configure the app environment values and print debug logs
+configure_app_environment_values()
+print_environment_debug_logs()
+print_test_logs()
+
+# # Start the Pub/Sub subscriber thread
+# logger.info("Starting the subscriber thread...")
+# subscriber_thread = threading.Thread(
+#     target=gcp_pub_sub_consumer.start_subscriber,
+#     args=(gcp_pub_sub_consumer.consume_message,),
+#     kwargs={"max_workers": 2},
+#     daemon=True
+# )
+# subscriber_thread.start()
+# logger.info("Subscriber thread started successfully.")
+#
+# # Start gRPC service in a separate thread
+# logger.info("Starting gRPC service thread...")
+# grpc_thread = threading.Thread(target=serve)
+# grpc_thread.start()
+# logger.info("gRPC service started successfully.")
+
+# Change the log level to INFO after the startup event is complete
+if app.state.ENVIRONMENT != 'local':
+    setup_logging(logging.INFO)  # Setup logging before the app starts
+else:
+    setup_logging_local(logging.INFO)
 
 
-def create_app():
-    # Register blueprints
-    app.register_blueprint(controller_blueprint, url_prefix=url_prefix_controller)
 
-    # Add a test log statement
-    logger.info("TEST: Logging is set up correctly.")
+@app.get("/test")
+async def streaming():
+    logger.info("REACHED TEST UVICORN ENDPOINT")
+    response = "Hello from TEST UVICORN ENDPOINT"
+    return {"message": response}
 
-    # Construct the correct path to the YAML file
-    current_dir = os.path.dirname(__file__)
-    yaml_file_path = os.path.join(current_dir, 'app', 'utils', 'swagger_docs.yaml')
-
-    # Print the path to ensure it's correct
-    logger.info(f"YAML file path: {yaml_file_path}")
-
-    # Load the Swagger configuration from the YAML file
-    with open(yaml_file_path, 'r') as file:
-        swagger_template = yaml.safe_load(file)
-    swagger = Swagger(app, template=swagger_template)
-
-    try:
-        logger.info("Starting the subscriber thread...")
-        subscriber_thread = threading.Thread(target=gcp_pub_sub_consumer.start_subscriber,
-                                             args=(gcp_pub_sub_consumer.consume_message,),
-                                             kwargs={"max_workers": 1},
-                                             daemon=True)
-        subscriber_thread.start()
-        logger.info("Subscriber thread started successfully.")
-    except Exception as e:
-        logger.error(f"Failed to start subscriber thread: {e}")
-
-    # grpc_process = Process(target=serve)
-    # grpc_process.start()
-
-
-# This is the entry point for Gunicorn
-create_app()
-# Start the GRPC server before running the Flask app
-grpc_thread = threading.Thread(target=serve)
-grpc_thread.start()
 
 if __name__ == "__main__":
-    # grpc_process = Process(target=serve)
-    # grpc_process.start()
-    app.run(host="0.0.0.0", port=8080, debug=False)
-
-
-
-
+    import uvicorn
+    logger.error("ARRANCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    uvicorn.run("api_base_service:app", host="0.0.0.0", port=8080, log_level="info")
+    logger.error("ARRANCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 2")

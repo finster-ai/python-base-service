@@ -1,13 +1,42 @@
 import logging
+import os
 import sys
 from uvicorn.config import LOGGING_CONFIG
 import json
+import time
 
 
 class HumanReadableFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        # Custom format to include microseconds and timezone
+        ct = self.converter(record.created)
+        if datefmt:
+            s = time.strftime(datefmt, ct)
+        else:
+            t = time.strftime("%Y-%m-%d %H:%M:%S", ct)
+            s = f"{t},{int(record.msecs):03d} {time.strftime('%z', ct)}"
+        return s
+
     def format(self, record):
-        record.message = record.getMessage()
-        log_record = f"{self.formatTime(record, '%Y-%m-%d %H:%M:%S')} - {record.levelname} - {record.message}"
+        # Format the timestamp with milliseconds and timezone
+        timestamp = self.formatTime(record, '%Y-%m-%d %H:%M:%S,%03d %z')
+
+        # Get the process ID
+        process_id = os.getpid()
+
+        # Get the file name and line number
+        filename = record.pathname.split(os.sep)[-1]
+        lineno = record.lineno
+
+        # Ensure the log message is generated correctly with any arguments provided
+        message = record.getMessage()
+
+        # Construct the log message
+        log_record = (
+            f"[{timestamp}] [{process_id}] [{record.levelname}] "
+            f"[{filename}:{lineno}] {message}"
+        )
+
         return log_record
 
 class LevelBasedFilter(logging.Filter):
@@ -93,5 +122,36 @@ def setup_logging(min_log_level):
     }
     logging_config['formatters']['access'] = {
         '()': JsonFormatter,
+    }
+    logging.config.dictConfig(logging_config)
+
+
+
+def setup_logging_local(min_log_level):
+    formatter = HumanReadableFormatter()
+
+    # Set up a handler for stdout
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setLevel(min_log_level)
+    stdout_handler.addFilter(LevelBasedFilter(logging.INFO))
+    stdout_handler.setFormatter(formatter)
+
+    # Set up a handler for stderr
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    stderr_handler.setLevel(logging.WARNING)
+    stderr_handler.setFormatter(formatter)
+
+    # Clear existing handlers to avoid duplicates
+    root_logger = logging.getLogger()
+    root_logger.handlers = []
+    root_logger.setLevel(min_log_level)  # Capture all levels
+    root_logger.handlers = [stdout_handler, stderr_handler]
+
+    logging_config = LOGGING_CONFIG
+    logging_config['formatters']['default'] = {
+        '()': HumanReadableFormatter,
+    }
+    logging_config['formatters']['access'] = {
+        '()': HumanReadableFormatter,
     }
     logging.config.dictConfig(logging_config)

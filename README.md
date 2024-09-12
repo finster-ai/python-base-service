@@ -70,7 +70,7 @@ gunicorn --config gunicorn.conf.py --workers=1 --bind=0.0.0.0:8080 --timeout=600
 
 [//]: # (and for new dev)
 ```
-docker buildx build --platform linux/amd64 -t us-central1-docker.pkg.dev/finster-ops/registry-docker/weaviate-upload-service:latest --push .
+docker buildx build --platform linux/amd64 -t us-central1-docker.pkg.dev/finster-ops/registry-docker/api-base-service:latest --push .
 ```
 
 
@@ -84,7 +84,7 @@ kubectl apply -f deployment-dev.yaml
 ### Force Redeploy
 
 ```
-kubectl rollout restart deployment -n dev weaviate-upload-service
+kubectl rollout restart deployment -n dev api-base-service
 ```
 
 
@@ -92,7 +92,7 @@ kubectl rollout restart deployment -n dev weaviate-upload-service
 ### Delete Service
 
 ```
-kubectl delete deployment  -n dev weaviate-upload-service
+kubectl delete deployment  -n dev api-base-service
 ```
 
 

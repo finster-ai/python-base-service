@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: weaviate-upload-service
+  name: api-base-service
   namespace: dev
   labels:
-    app: weaviate-upload-service
+    app: api-base-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: weaviate-upload-service
+      app: api-base-service
   template:
     metadata:
       labels:
-        app: weaviate-upload-service
+        app: api-base-service
     spec:
       serviceAccountName: data-feed
       containers:
-        - name: weaviate-upload-service
-          image: us-central1-docker.pkg.dev/finster-ops/registry-docker/weaviate-upload-service:latest
+        - name: api-base-service
+          image: us-central1-docker.pkg.dev/finster-ops/registry-docker/api-base-service:latest
           imagePullPolicy: Always
           resources:
             requests:
@@ -33,6 +33,8 @@ spec:
 #              value: "/var/secrets/google/key.json"
             - name: FLASK_ENV
               value: "development"
+            -   name: TYPE
+                value: "development"
             - name: PROJECT_ID
               value: "finster-dev"
             - name: LOCATION

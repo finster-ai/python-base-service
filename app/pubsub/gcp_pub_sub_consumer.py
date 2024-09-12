@@ -10,6 +10,10 @@ def consume_message(message):
     logger.info("Message received: %s", message.data)
     try:
         data = json.loads(message.data.decode('utf-8'))
+        user_id = data["user_id"]
+        request_id = data["request_id"]
+        session_id = data["session_id"]
+        query_id = data["query_id"]
         logger.info("Message deserialized successfully")
         logger.info("Message processing finished successfully")
     except Exception as e:
@@ -37,9 +41,9 @@ def create_subscription_if_not_exists(subscriber, topic_path, subscription_path)
 
 
 def start_subscriber(callback, max_workers=1):
-    project_id = app.config['APP_PROJECT_ID']
-    topic_id = app.config['PUBSUB_TOPIC_ID']
-    subscription_id = app.config['PUBSUB_SUBSCRIPTION_ID']
+    project_id = app.state.APP_PROJECT_ID
+    topic_id = app.state.PUBSUB_TOPIC_ID
+    subscription_id = app.state.PUBSUB_SUBSCRIPTION_ID
 
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(project_id, topic_id)

@@ -1,17 +1,16 @@
 # /requirements.txt
 blinker==1.8.2
 click==8.1.7
-Flask==3.0.3
 itsdangerous==2.2.0
 Jinja2==3.1.4
 jose==1.0.0
 MarkupSafe==2.1.5
 six==1.16.0
 Werkzeug==3.0.3
+fastapi
+uvicorn
 
 
-Flask >= 2.2
-gunicorn==20.1.0
 python-dotenv
 python-jose
 flask-cors

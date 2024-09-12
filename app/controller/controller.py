@@ -1,108 +1,81 @@
 # controller.py
-import logging
+
+
 import random
 from time import sleep
-from flask import Blueprint, jsonify, g, Response, request, stream_with_context
-
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse
 from app.model.api_error_response import ErrorDetail, ApiErrorResponse
 from app.utils.api_utils import g_query_tracking_values_to_str, create_api_response
-from app_instance import app, logger
-from flask import Blueprint, jsonify
-from flask_cors import cross_origin
-from app.service import AuthService
-from app.service.AuthService import requires_auth
+from app_instance import logger
+from app.service import auth_service
+from app.service.auth_service import requires_auth
 from app.utils.wrappers import set_session_id, request_tracking_with_id
-from werkzeug.exceptions import HTTPException
 import traceback
 
+# Create APIRouter instance
+router = APIRouter(
+    prefix="/api/v2",
+    tags=["controller"],
+)
 
-# # Initialize the logger
-# logger = logging.getLogger(__name__)
-
-# Create a Blueprint named 'controller'
-controller_blueprint = Blueprint('controller', __name__)
-url_prefix_controller = '/api/v2'
-
-
-# Register the error handler for the AuthService.AuthError
-@app.errorhandler(AuthService.AuthError)
-def handle_auth_error(ex):
+# Error handling for AuthService.AuthError
+@router.exception_handler(auth_service.AuthError)
+async def handle_auth_error(request: Request, ex: auth_service.AuthError):
     error_detail = ErrorDetail(code=ex.status_code, message=ex.error)
     api_error_response = ApiErrorResponse(errors=[error_detail])
-    logger.error(f"Authentication error for " + g_query_tracking_values_to_str(g) + f" - ERROR: {ex}")
-    return api_error_response.to_response()
+    logger.exception(f"Authentication error for {g_query_tracking_values_to_str(request.state)} - ERROR: {ex}")
+    return JSONResponse(status_code=ex.status_code, content=api_error_response.dict())
 
-
-# Define error handlers specifically for the blueprint
-@controller_blueprint.errorhandler(HTTPException)
-def handle_blueprint_error(e):
-    error_detail = ErrorDetail(code=e.code, message=str(e))
+# Define error handlers for HTTPException
+@router.exception_handler(HTTPException)
+async def handle_blueprint_error(request: Request, e: HTTPException):
+    error_detail = ErrorDetail(code=e.status_code, message=str(e.detail))
     api_error_response = ApiErrorResponse(errors=[error_detail])
-    logger.error(f"Blueprint error for " + g_query_tracking_values_to_str(g) + f" - ERROR: {e}")
-    return api_error_response.to_response()
+    logger.exception(f"Blueprint error for {g_query_tracking_values_to_str(request.state)} - ERROR: {e}")
+    return JSONResponse(status_code=e.status_code, content=api_error_response.dict())
 
-
-@controller_blueprint.errorhandler(Exception)
-def handle_generic_blueprint_error(e):
+# Generic error handler
+@router.exception_handler(Exception)
+async def handle_generic_blueprint_error(request: Request, e: Exception):
     error_detail = ErrorDetail(code=500, message=str(e))
     api_error_response = ApiErrorResponse(errors=[error_detail])
-    logger.error(f"Blueprint Generic error for " + g_query_tracking_values_to_str(g) + f" - ERROR: {e}")
-    return api_error_response.to_response()
+    logger.exception(f"Blueprint Generic error for {g_query_tracking_values_to_str(request.state)} - ERROR: {e}")
+    return JSONResponse(status_code=500, content=api_error_response.dict())
 
-
-# Define routes within the Blueprint
-@controller_blueprint.route("/public")
-@cross_origin(headers=["Content-Type", "Authorization"])
+# Public route
+@router.get("/public")
 @set_session_id
 @request_tracking_with_id
-def public():
-    logger.info("You've reached the " + request.endpoint + " endpoint")
-    # Generate a random wait time between 1 and 5 seconds
+async def public(request: Request):
+    logger.info(f"You've reached the {request.url.path} endpoint")
     wait_time = random.uniform(1, 5)
     sleep(wait_time)
-    # response = jsonify(":A:A:A:A - You had to wait for " + str(wait_time) + " seconds to see this.")
-    # response.headers.add("Access-Control-Allow-Origin", "*")
-    # response.headers.add("ContentType", "application/json")
-    # logger.info("FINISHED - You've reached the " + request.endpoint + " endpoint")
-
-    response = create_api_response(":A:A:A:A - You had to wait for " + str(wait_time) + " seconds to see this.", g)
+    response = create_api_response(f":A:A:A:A - You had to wait for {wait_time} seconds to see this.", request.state)
     return response
 
-
-@controller_blueprint.route("/private")
-@cross_origin(headers=["Content-Type", "Authorization"])
+# Private route with authentication
+@router.get("/private")
 @requires_auth
 @request_tracking_with_id
-def private():
+async def private(request: Request):
     try:
-        # Intentionally raise an exception to test error handling
         raise ValueError("This is a test exception")
-        response = "Hello from a private endpoint! You had to be authenticated to access to see this."
-        return jsonify(message=response)
     except ValueError as e:
-        # TODO - ESTOS 2 LOGS SON EXACTAMENTE LO MISMO, CONVIENE USAR EL SEGUNDO
-        # logger.error(f"An error occurred: {e} - {traceback.format_exc()}")
-        logger.exception(f"An error occurred: ")
+        logger.exception(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="A ValueError occurred in /private endpoint")
 
-        error = HTTPException(description="A ValueError occurred in /private endpoint")
-        error.code = 500  # Add a status code
-        raise error
-
-
-# Define routes within the Blueprint
-@controller_blueprint.route("/public2")
-@cross_origin(headers=["Content-Type", "Authorization"])
+# Another public route
+@router.get("/public2")
 @set_session_id
-def public2():
-    logger.info("You've reached the " + request.endpoint + " endpoint")
-    # Generate a random wait time between 1 and 5 seconds
+async def public2(request: Request):
+    logger.info(f"You've reached the {request.url.path} endpoint")
     wait_time = random.uniform(1, 5)
     sleep(wait_time)
-    response = create_api_response(":A:A:A:A - You had to wait for " + str(wait_time) + " seconds to see this.", g)
+    response = create_api_response(f":A:A:A:A - You had to wait for {wait_time} seconds to see this.", request.state)
     return response
 
-
-@controller_blueprint.route("/")
-def hello_world():
+# Basic route
+@router.get("/")
+async def hello_world():
     return "Hello World!"
-

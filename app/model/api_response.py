@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from flask import Response
+from fastapi.responses import JSONResponse
 import json
 
 
@@ -23,11 +23,8 @@ class ApiResponse:
         ])
 
     def to_response(self):
-        json_response = json.dumps(self.to_dict(), default=dict)
-        response = Response(json_response, mimetype='application/json')
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add("ContentType", "application/json")
-        return response
+        json_response = self.to_dict()
+        return JSONResponse(content=json_response, headers={"Access-Control-Allow-Origin": "*"})
 
 
 
