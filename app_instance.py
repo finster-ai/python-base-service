@@ -36,11 +36,9 @@ logger = logging.getLogger(__name__)  # Add this line to get the logger
 
 
 
-logger.error("APP_INSTANCE INTIALIZATION")
-
-
+# logger.error("APP_INSTANCE INTIALIZATION")
 app = FastAPI()
-logger.error("APP_INSTANCE INTIALIZATION - POST FATSAPI")
+
 
 # Enable CORS
 app.add_middleware(
@@ -52,7 +50,7 @@ app.add_middleware(
 )
 
 
-logger.error("APP_INSTANCE INTIALIZATION - POST FATSAPI 2")
+# logger.error("APP_INSTANCE INTIALIZATION - POST FATSAPI 2")
 
 def deep_merge_dicts(a, b):
     """Deep merge two dictionaries."""

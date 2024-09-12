@@ -52,9 +52,9 @@ python -m grpc_tools.protoc -I./app/proto --python_out=./app/proto/gen --grpc_py
 
 
 
-### Running the app with Gunicorn
+### Running the app with Uvicorn
 ```
-gunicorn --config gunicorn.conf.py --workers=1 --bind=0.0.0.0:8080 --timeout=600 --threads=8 api_base_service:app
+uvicorn api_base_service:app --host 0.0.0.0 --port 8080 --workers 1 --timeout=600
 ```
 
 

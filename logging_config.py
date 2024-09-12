@@ -8,18 +8,15 @@ import time
 
 class HumanReadableFormatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
-        # Custom format to include microseconds and timezone
+        # Correct format with milliseconds and timezone
         ct = self.converter(record.created)
-        if datefmt:
-            s = time.strftime(datefmt, ct)
-        else:
-            t = time.strftime("%Y-%m-%d %H:%M:%S", ct)
-            s = f"{t},{int(record.msecs):03d} {time.strftime('%z', ct)}"
+        t = time.strftime("%Y-%m-%d %H:%M:%S", ct)
+        s = f"{t},{int(record.msecs):03d} {time.strftime('%z', ct)}"
         return s
 
     def format(self, record):
         # Format the timestamp with milliseconds and timezone
-        timestamp = self.formatTime(record, '%Y-%m-%d %H:%M:%S,%03d %z')
+        timestamp = self.formatTime(record)
 
         # Get the process ID
         process_id = os.getpid()
