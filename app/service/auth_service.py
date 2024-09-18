@@ -1,23 +1,25 @@
-#  auth_service.py
-
 import json
 import os
-from six.moves.urllib.request import urlopen
+from urllib.request import urlopen
 from functools import wraps
 from fastapi import Request, HTTPException, Depends
 from jose import jwt
 from app_instance import app, logger
 
-AUTH0_DOMAIN = app.state['AUTH_DOMAIN']
-API_AUDIENCE = app.state['AUTH_AUDIENCE']
-ALGORITHMS = app.state['AUTH_ALGORITHMS']
-defaultEnvironment = app.state['DEFAULT_ENVIRONMENT']
+
+AUTH0_DOMAIN = app.state.AUTH_DOMAIN
+API_AUDIENCE = app.state.AUTH_AUDIENCE
+ALGORITHMS = app.state.AUTH_ALGORITHMS
+defaultEnvironment = app.state.DEFAULT_ENVIRONMENT
+defaultEnvironment = 'development'
+
 
 # Error handler
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
+
 
 def get_token_auth_header(request: Request):
     """Obtains the Access Token from the Authorization Header"""
@@ -36,6 +38,8 @@ def get_token_auth_header(request: Request):
 
     return parts[1]
 
+
+# This checks if the JWT in Auth header is valid, decodes it and assigns the payload to g.current_user. If not it raises an authentication error
 def requires_auth(f):
     """Determines if the Access Token is valid"""
     @wraps(f)
@@ -84,6 +88,7 @@ def requires_auth(f):
 
         except AuthError as e:
             logger.error(f"Authentication error: {e}")
-            raise HTTPException(status_code=e.status_code, detail=e.error)
+            # raise HTTPException(status_code=e.status_code, detail=e.error)
+            raise AuthError({"code": e.status_code, "description": e.error}, 401)
 
     return decorated

@@ -57,8 +57,12 @@ class CustomLogger(logging.getLoggerClass()):
         prefix = build_log_prefix(request)
         return f"{prefix} {msg}" if prefix else msg
 
-    def _log_with_stacklevel(self, level, msg, *args, request: Request = None, **kwargs):
+    def _log_with_stacklevel(self, level, msg, *args, request: Request = None, exc_info=None, **kwargs):
         msg = self.build_msg(msg, request)
+
+        if exc_info:
+            kwargs['exc_info'] = exc_info
+
         if 'stacklevel' not in kwargs:
             frame_info = inspect.stack()
             stacklevel = 2
@@ -67,6 +71,7 @@ class CustomLogger(logging.getLoggerClass()):
                     stacklevel = i + 1
                     break
             kwargs['stacklevel'] = stacklevel
+
         super().log(level, msg, *args, **kwargs)
 
     def info(self, msg, *args, request: Request = None, **kwargs):
@@ -87,21 +92,21 @@ class CustomLogger(logging.getLoggerClass()):
     def exception(self, msg, *args, request: Request = None, **kwargs):
         self._log_with_stacklevel(logging.ERROR, msg, *args, exc_info=True, request=request, **kwargs)
 
-    def info_with_event(self, msg, elapsed_time, processed_method, *args, request: Request = None, **kwargs):
-        self._log_with_stacklevel(logging.INFO, msg, *args, request=request, **kwargs)
-        self.log_event_to_posthog("info", elapsed_time, processed_method)
-
-    def log_event_to_posthog(self, level, elapsed_time, processed_method):
-        prefix_properties = {}
-        clean_prefix = build_log_prefix().strip('[]')
-        prefix_parts = clean_prefix.split('] [')
-
-        for part in prefix_parts:
-            if ':' in part:
-                key, value = part.split(':', 1)
-                prefix_properties[key.strip()] = value.strip()
-
-        # Implement your PostHog event capture logic here
+    # def info_with_event(self, msg, elapsed_time, processed_method, *args, request: Request = None, **kwargs):
+    #     self._log_with_stacklevel(logging.INFO, msg, *args, request=request, **kwargs)
+    #     self.log_event_to_posthog("info", elapsed_time, processed_method)
+    #
+    # def log_event_to_posthog(self, level, elapsed_time, processed_method):
+    #     prefix_properties = {}
+    #     clean_prefix = build_log_prefix().strip('[]')
+    #     prefix_parts = clean_prefix.split('] [')
+    #
+    #     for part in prefix_parts:
+    #         if ':' in part:
+    #             key, value = part.split(':', 1)
+    #             prefix_properties[key.strip()] = value.strip()
+    #
+    #     # Implement your PostHog event capture logic here
 
 class ContextualFilter(logging.Filter):
     def filter(self, record):

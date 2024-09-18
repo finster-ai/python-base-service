@@ -21,4 +21,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD ["uvicorn", "api_base_service:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1", "--log-level", "info"]
+CMD ["uvicorn", "python_base_service:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1", "--timeout-keep-alive", "600"]

@@ -5,7 +5,7 @@ app:
 #    location: "us-central1"
 auth:
     domain: "finster.us.auth0.com"
-    audience: "https://finster.us.auth0.com/api/v2/"
+    audience: "https://auth.finster.ai"
     algorithms: ["RS256"]
 database:
     sql:

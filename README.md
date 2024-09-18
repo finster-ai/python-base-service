@@ -24,6 +24,8 @@ pip install -U pip
 pip install -r requirements.txt
 ```
 
+
+
 ### Running locally
 
 The backend needs access to GCP to run. Before running it for the first time, you need to authenticate running this command in your terminal.
@@ -54,7 +56,7 @@ python -m grpc_tools.protoc -I./app/proto --python_out=./app/proto/gen --grpc_py
 
 ### Running the app with Uvicorn
 ```
-uvicorn api_base_service:app --host 0.0.0.0 --port 8080 --workers 1 --timeout=600
+uvicorn python_base_service:app --host 0.0.0.0 --port 8080 --workers 1 --timeout-keep-alive 600
 ```
 
 
@@ -96,3 +98,17 @@ kubectl delete deployment  -n dev api-base-service
 ```
 
 
+
+## Building Image and Running Locally
+### Build Image
+```
+docker build --platform linux/amd64 -t python-base-service:local .
+```
+### Deploy Image
+```
+docker run --platform linux/amd64 -d -p 8080:8080 \
+--name python-base-service-local \
+-v /Users/emmanuelcastillodecarvalho/Finster\ AI/.gke-automation-emmanuel-daring-keep-408013.json:/var/secrets/google/key.json \
+-e GOOGLE_APPLICATION_CREDENTIALS="/var/secrets/google/key.json" \
+python-base-service:local
+```

@@ -13,7 +13,6 @@ uvicorn
 
 python-dotenv
 python-jose
-flask-cors
 six
 google-cloud-secret-manager
 google-cloud-logging

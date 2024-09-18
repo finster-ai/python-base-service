@@ -25,8 +25,8 @@ spec:
         app: api-base-service
     spec:
       containers:
-        - name: api-base-service
-          image: gcr.io/daring-keep-408013/github.com/finster-ai/services/api-base-service/api-base-service:latest
+        - name: python-base-service
+          image: gcr.io/daring-keep-408013/github.com/finster-ai/services/python-base-service/python-base-service:latest
           imagePullPolicy: Always
           resources:
             requests:

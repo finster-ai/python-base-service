@@ -17,8 +17,8 @@ spec:
     spec:
       serviceAccountName: data-feed
       containers:
-        - name: api-base-service
-          image: us-central1-docker.pkg.dev/finster-ops/registry-docker/api-base-service:latest
+        - name: python-base-service
+          image: us-central1-docker.pkg.dev/finster-ops/registry-docker/python-base-service:latest
           imagePullPolicy: Always
           resources:
             requests:
