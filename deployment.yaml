@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-base-service
+  name: python-base-service
   namespace: default
   labels:
     app: api-base-service
@@ -9,11 +9,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: api-base-service
+      app: python-base-service
   template:
     metadata:
       labels:
-        app: api-base-service
+        app: python-base-service
     spec:
       serviceAccountName: api-dev
       containers:
