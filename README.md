@@ -1,4 +1,4 @@
-# API-base-service
+# python-base-service-fastapi-uvicorn
 
 This is a base repo of a Python microservice that provides a REST API, PUB/SUB capabilities and a GRPC API. It is built on top of Flask
 TODO: add mongo and redis implementation
